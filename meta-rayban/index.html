@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>VYVEN × Ray-Ban Meta — Concept</title>
+<meta name="description" content="VYVEN × Ray-Ban Meta partnership concept — smart glasses tuned for live presence. Interactive 3D." />
+<meta property="og:title" content="VYVEN × Ray-Ban Meta — Concept" />
+<meta property="og:description" content="Go live from your seat. Hands-free. Interactive 3D partnership concept." />
+<meta property="og:image" content="assets/vyven-knot.png" />
+<link rel="icon" type="image/png" href="assets/vyven-knot.png" />
+<style>
+  :root {
+    --navy-deep: #04061a;
+    --navy: #0a1133;
+    --ink: #dfe7ff;
+    --ink-dim: #8d9bd1;
+    --cyan: #59d8ff;
+    --pill: #0e1840;
+    --pill-border: #2c3f8f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: radial-gradient(120% 90% at 50% 10%, var(--navy) 0%, var(--navy-deep) 62%, #020310 100%);
+    color: var(--ink);
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  #scene { position: fixed; inset: 0; display: block; cursor: grab; touch-action: none; }
+  #scene.dragging { cursor: grabbing; }
+
+  /* ---------- header ---------- */
+  header {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; gap: 14px;
+    padding: 22px 28px; z-index: 10; pointer-events: none;
+  }
+  header img.wordmark { height: 26px; display: block; }
+  header .x { color: var(--ink-dim); font-size: 15px; }
+  header .partner {
+    font-size: 15px; letter-spacing: 0.22em; font-weight: 600; color: var(--ink);
+    white-space: nowrap;
+  }
+  header .partner span { color: var(--ink-dim); font-weight: 400; }
+  .concept-chip {
+    margin-left: auto; pointer-events: none;
+    font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--cyan); border: 1px solid rgba(89, 216, 255, 0.35);
+    padding: 6px 12px; border-radius: 999px; background: rgba(9, 20, 51, 0.55);
+    backdrop-filter: blur(6px);
+  }
+
+  /* ---------- tagline ---------- */
+  .tagline {
+    position: fixed; left: 28px; bottom: 88px; z-index: 10; pointer-events: none;
+    max-width: 380px;
+  }
+  .tagline h1 { font-size: clamp(22px, 3.4vw, 34px); font-weight: 650; line-height: 1.15; letter-spacing: 0.01em; }
+  .tagline h1 em { font-style: normal; color: var(--cyan); }
+  .tagline p { margin-top: 10px; font-size: 13px; color: var(--ink-dim); line-height: 1.5; }
+
+  /* ---------- finish switcher ---------- */
+  .finishes {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    display: flex; gap: 10px; z-index: 10;
+  }
+  .finishes button {
+    display: flex; align-items: center; gap: 9px;
+    font: 600 12.5px/1 "Segoe UI", sans-serif; letter-spacing: 0.04em; color: var(--ink);
+    background: var(--pill); border: 1px solid var(--pill-border);
+    border-radius: 10px; padding: 11px 16px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .finishes button:hover { border-color: #4a63c9; }
+  .finishes button.active { border-color: var(--cyan); background: #122055; }
+  .finishes .swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); }
+
+  /* ---------- hint + disclaimer ---------- */
+  .hint {
+    position: fixed; right: 28px; bottom: 92px; z-index: 10; pointer-events: none;
+    font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim);
+    opacity: 0.9;
+  }
+  .disclaimer {
+    position: fixed; right: 28px; bottom: 24px; z-index: 10; pointer-events: none;
+    font-size: 9.5px; color: #5a679f; max-width: 330px; text-align: right; line-height: 1.45;
+  }
+
+  /* ---------- hotspots ---------- */
+  .hotspot {
+    position: fixed; z-index: 9; width: 18px; height: 18px; margin: -9px 0 0 -9px;
+    border-radius: 50%; border: none; cursor: pointer; padding: 0;
+    background: rgba(89, 216, 255, 0.18);
+    box-shadow: 0 0 0 1.5px rgba(89, 216, 255, 0.8), 0 0 14px rgba(89, 216, 255, 0.55);
+    transition: opacity 0.25s, transform 0.2s;
+  }
+  .hotspot::after {
+    content: ""; position: absolute; inset: 5px; border-radius: 50%;
+    background: var(--cyan);
+  }
+  .hotspot:hover { transform: scale(1.25); }
+  .hotspot.hidden { opacity: 0; pointer-events: none; }
+
+  .card {
+    position: fixed; left: 50%; bottom: 86px; transform: translateX(-50%) translateY(8px);
+    z-index: 11; width: min(420px, calc(100vw - 40px));
+    background: rgba(10, 18, 48, 0.92); border: 1px solid #31459b;
+    border-radius: 14px; padding: 16px 18px; backdrop-filter: blur(10px);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s;
+    box-shadow: 0 18px 50px rgba(0, 0, 10, 0.5);
+  }
+  .card.open { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+  .card h3 { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cyan); margin-bottom: 6px; }
+  .card p { font-size: 13.5px; line-height: 1.55; color: var(--ink); }
+  .card .close {
+    position: absolute; top: 10px; right: 12px; background: none; border: none;
+    color: var(--ink-dim); font-size: 16px; cursor: pointer; line-height: 1;
+  }
+
+  /* ---------- intro overlay ---------- */
+  #intro {
+    position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px;
+    background: radial-gradient(120% 90% at 50% 10%, var(--navy) 0%, var(--navy-deep) 62%, #020310 100%);
+    transition: opacity 0.9s ease;
+  }
+  #intro.gone { opacity: 0; pointer-events: none; }
+  #intro img { height: 34px; }
+  #intro .x-row { display: flex; align-items: center; gap: 14px; }
+  #intro .x-row .partner { font-size: 17px; letter-spacing: 0.26em; color: var(--ink); font-weight: 600; }
+  #intro .sub { font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-dim); }
+
+  @media (max-width: 640px) {
+    header { padding: 16px 16px; gap: 10px; }
+    header img.wordmark { height: 19px; }
+    header .partner { font-size: 12px; letter-spacing: 0.16em; }
+    .concept-chip { display: none; }
+    .tagline { left: 16px; bottom: 132px; max-width: 270px; }
+    .tagline p { display: none; }
+    .hint { display: none; }
+    .disclaimer { right: 16px; left: 16px; bottom: 78px; text-align: center; max-width: none; }
+    .finishes { bottom: 18px; width: calc(100vw - 32px); }
+    .finishes button { flex: 1; justify-content: center; padding: 12px 8px; }
+    .card { bottom: 150px; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <header>
+    <img class="wordmark" src="assets/vyven-wordmark.png" alt="VYVEN" />
+    <span class="x">×</span>
+    <span class="partner">RAY-BAN <span>|</span> META</span>
+    <span class="concept-chip">Partnership Concept</span>
+  </header>
+
+  <div class="tagline">
+    <h1>Go live from your seat.<br /><em>Hands-free.</em></h1>
+    <p>Smart glasses, tuned for live presence. Tap the temple — your section's view opens as a VYVEN room for everyone who couldn't be there.</p>
+  </div>
+
+  <div class="hint">Drag to spin &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Tap the dots</div>
+
+  <div class="finishes" role="group" aria-label="Frame finish">
+    <button id="finish-midnight" class="active">
+      <span class="swatch" style="background:#0e1a46"></span> Midnight Navy
+    </button>
+    <button id="finish-crystal">
+      <span class="swatch" style="background:linear-gradient(135deg,#24398f,#5d77d6)"></span> Crystal Navy
+    </button>
+  </div>
+
+  <div class="disclaimer">
+    Independent partnership concept by VYVEN — not an official Ray-Ban or Meta product.
+    Ray-Ban® is a trademark of Luxottica Group S.p.A. Meta® is a trademark of Meta Platforms, Inc.
+  </div>
+
+  <div class="card" id="card">
+    <button class="close" id="card-close" aria-label="Close">✕</button>
+    <h3 id="card-title"></h3>
+    <p id="card-body"></p>
+  </div>
+
+  <div id="intro">
+    <div class="x-row">
+      <img src="assets/vyven-wordmark.png" alt="VYVEN" />
+      <span style="color:#8d9bd1">×</span>
+      <span class="partner">RAY-BAN&nbsp;META</span>
+    </div>
+    <div class="sub">Concept Edition — Loading</div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
