@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>VYVEN — The Weave</title>
+<meta name="description" content="The idea behind the VYVEN logo. Two strings of experience, woven into one memory. Interactive 3D, built from the real parametric equations of the mark." />
+<meta property="og:title" content="VYVEN — The Weave" />
+<meta property="og:description" content="Two experiences, woven into one. The VYVEN logo, generated live from its own equations. Drag to weave." />
+<meta property="og:image" content="assets/vyven-knot.png" />
+<meta name="theme-color" content="#000032" />
+<link rel="icon" type="image/png" href="assets/vyven-knot.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=Rubik+Mono+One&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --void: #000032;
+    --navy: #0a1140;
+    --ink: #e6ecff;
+    --ink-dim: #8d9bd1;
+    --ink-faint: #5a679f;
+    --cyan: #59e6ff;
+    --cyan-pure: #1bffff;
+    --coral: #ff8059;
+    --panel: rgba(8, 14, 52, 0.66);
+    --panel-border: rgba(70, 92, 170, 0.42);
+    --pill: #0c1442;
+    --pill-border: #2c3f8f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: radial-gradient(125% 95% at 50% 8%, #0a1450 0%, #03062a 55%, #000018 100%);
+    color: var(--ink);
+    font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  #scene { position: fixed; inset: 0; display: block; cursor: grab; touch-action: none; }
+  #scene.dragging { cursor: grabbing; }
+
+  /* ---------- header ---------- */
+  header {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; align-items: center; gap: 14px;
+    padding: 22px 26px; z-index: 10; pointer-events: none;
+  }
+  header img.wordmark { height: 24px; display: block; filter: drop-shadow(0 0 18px rgba(89,230,255,0.25)); }
+  .chip {
+    font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--cyan); border: 1px solid rgba(89, 230, 255, 0.32);
+    padding: 6px 12px; border-radius: 999px; background: rgba(9, 18, 56, 0.5);
+    backdrop-filter: blur(6px);
+  }
+  header .chip.left { margin-left: 4px; }
+  header .spacer { margin-left: auto; }
+  .info-btn {
+    pointer-events: auto;
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 1px solid var(--panel-border); background: rgba(9,18,56,0.5);
+    color: var(--ink-dim); font-size: 15px; font-weight: 600; cursor: pointer;
+    backdrop-filter: blur(6px); transition: border-color .2s, color .2s;
+  }
+  .info-btn:hover { border-color: var(--cyan); color: var(--ink); }
+
+  /* ---------- narrative (bottom-left) ---------- */
+  .narrative {
+    position: fixed; left: 28px; bottom: 34px; z-index: 10; pointer-events: none;
+    max-width: 440px;
+  }
+  .narrative .eyebrow {
+    font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 10px; opacity: 0.9;
+  }
+  .narrative h1 {
+    font-size: clamp(26px, 4vw, 44px); font-weight: 600; line-height: 1.08;
+    letter-spacing: -0.01em;
+    transition: opacity .5s ease;
+  }
+  .narrative h1 em { font-style: normal; color: var(--cyan); }
+  .narrative p { margin-top: 12px; font-size: 13.5px; color: var(--ink-dim); line-height: 1.55; max-width: 380px; }
+
+  /* ---------- control panel (right) ---------- */
+  .panel {
+    position: fixed; right: 24px; top: 50%; transform: translateY(-50%);
+    z-index: 11; width: 300px; pointer-events: auto;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 16px; padding: 18px 18px 16px; backdrop-filter: blur(14px);
+    box-shadow: 0 24px 70px rgba(0, 0, 12, 0.55);
+  }
+  .panel h2 {
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-dim); margin-bottom: 4px; font-weight: 600;
+  }
+  .panel .lead { font-size: 12px; color: var(--ink-faint); margin-bottom: 16px; line-height: 1.5; }
+
+  .weave-row { margin-bottom: 18px; }
+  .weave-row .wl { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+  .weave-row .wl .name { font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: 0.02em; }
+  .weave-row .wl .pct { font-size: 12px; color: var(--cyan); font-variant-numeric: tabular-nums; }
+
+  .ctl { margin-bottom: 13px; }
+  .ctl .row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .ctl .row label { font-size: 11.5px; color: var(--ink-dim); letter-spacing: 0.04em; }
+  .ctl .row .val { font-size: 11.5px; color: var(--ink); font-variant-numeric: tabular-nums; opacity: 0.85; }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
+    background: linear-gradient(90deg, var(--cyan) 0%, var(--cyan) var(--fill, 50%), rgba(255,255,255,0.12) var(--fill, 50%));
+    border-radius: 4px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: #eaf6ff; border: 2px solid var(--cyan);
+    box-shadow: 0 0 12px rgba(89, 230, 255, 0.7); cursor: grab;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: #eaf6ff; border: 2px solid var(--cyan);
+    box-shadow: 0 0 12px rgba(89, 230, 255, 0.7); cursor: grab;
+  }
+  .weave-row input[type=range] { height: 6px; }
+  .weave-row input[type=range]::-webkit-slider-thumb { width: 20px; height: 20px; }
+
+  .actions { display: flex; gap: 9px; margin-top: 18px; }
+  .actions button {
+    flex: 1; font: 600 12.5px/1 "Rubik", sans-serif; letter-spacing: 0.03em;
+    padding: 12px 10px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--pill-border); background: var(--pill); color: var(--ink);
+    transition: border-color .2s, background .2s, transform .1s;
+  }
+  .actions button:hover { border-color: #4a63c9; }
+  .actions button:active { transform: scale(0.97); }
+  .actions button.primary {
+    background: linear-gradient(135deg, #15489a, #1f6fd6);
+    border-color: #3f8fe0; color: #fff;
+  }
+  .actions button.primary:hover { background: linear-gradient(135deg, #1a55b4, #2a82ef); }
+  .actions button.presence {
+    border-color: rgba(89,230,255,0.5); color: var(--cyan);
+    position: relative; overflow: hidden;
+  }
+  .actions button.presence.ready { animation: pulseGlow 2.2s ease-in-out infinite; }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(89,230,255,0.0); border-color: rgba(89,230,255,0.45); }
+    50% { box-shadow: 0 0 18px 2px rgba(89,230,255,0.35); border-color: rgba(89,230,255,0.9); }
+  }
+
+  .eq {
+    margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(70,92,170,0.25);
+    font-family: "Rubik Mono One", ui-monospace, monospace; font-size: 9.5px;
+    color: var(--ink-faint); line-height: 1.9; letter-spacing: 0.01em;
+    transition: opacity .3s, max-height .3s; overflow: hidden;
+  }
+  .eq.collapsed { opacity: 0; max-height: 0; margin: 0; padding: 0; border: 0; }
+  .eq b { color: var(--cyan); font-weight: 400; }
+  .eq .lbl { color: var(--ink-dim); }
+  .eq-toggle {
+    margin-top: 10px; font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-faint); background: none; border: none; cursor: pointer; padding: 0;
+  }
+  .eq-toggle:hover { color: var(--cyan); }
+
+  /* ---------- hint ---------- */
+  .hint {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+    z-index: 10; pointer-events: none;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .hint b { color: var(--ink-dim); font-weight: 500; }
+
+  /* ---------- about card ---------- */
+  .about {
+    position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center;
+    background: rgba(2, 4, 22, 0.72); backdrop-filter: blur(8px);
+    opacity: 0; pointer-events: none; transition: opacity .3s;
+  }
+  .about.open { opacity: 1; pointer-events: auto; }
+  .about .box {
+    width: min(560px, calc(100vw - 40px)); max-height: 85vh; overflow-y: auto;
+    background: linear-gradient(180deg, rgba(12,20,64,0.96), rgba(6,10,40,0.96));
+    border: 1px solid var(--panel-border); border-radius: 18px; padding: 30px 30px 26px;
+    box-shadow: 0 30px 90px rgba(0,0,10,0.6);
+  }
+  .about h3 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .about .sub { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cyan); margin-bottom: 18px; }
+  .about p { font-size: 14px; line-height: 1.65; color: var(--ink-dim); margin-bottom: 13px; }
+  .about p b { color: var(--ink); font-weight: 600; }
+  .about .layers { list-style: none; margin: 6px 0 14px; }
+  .about .layers li { font-size: 13px; color: var(--ink-dim); padding: 5px 0 5px 22px; position: relative; line-height: 1.5; }
+  .about .layers li::before { content: ""; position: absolute; left: 0; top: 11px; width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .about .close {
+    position: absolute; top: 18px; right: 20px; background: none; border: none;
+    color: var(--ink-dim); font-size: 20px; cursor: pointer; line-height: 1;
+  }
+  .about .box { position: relative; }
+
+  /* ---------- intro ---------- */
+  #intro {
+    position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 22px;
+    background: radial-gradient(125% 95% at 50% 8%, #0a1450 0%, #03062a 55%, #000018 100%);
+    transition: opacity 1s ease;
+  }
+  #intro.gone { opacity: 0; pointer-events: none; }
+  #intro img { height: 30px; opacity: 0.95; }
+  #intro .sub { font-size: 11px; letter-spacing: 0.34em; text-transform: uppercase; color: var(--ink-dim); }
+  #intro .bar { width: 160px; height: 2px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+  #intro .bar i { display: block; height: 100%; width: 30%; background: var(--cyan); border-radius: 2px; animation: load 1.2s ease-in-out infinite; box-shadow: 0 0 10px var(--cyan); }
+  @keyframes load { 0% { margin-left: -30%; } 100% { margin-left: 100%; } }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 760px) {
+    header { padding: 16px 16px; }
+    header img.wordmark { height: 19px; }
+    header .chip { display: none; }
+    .panel {
+      right: 10px; left: 10px; top: auto; bottom: 10px; transform: none; width: auto;
+      padding: 14px 14px 12px; border-radius: 16px;
+    }
+    .panel .lead { display: none; }
+    .ctl.adv { display: none; }
+    .panel.expanded .ctl.adv { display: block; }
+    .eq { display: none; }
+    .narrative { left: 16px; right: 16px; bottom: auto; top: 64px; max-width: none; }
+    .narrative h1 { font-size: 28px; }
+    .narrative p { display: none; }
+    .hint { display: none; }
+  }
+  @media (max-height: 720px) and (min-width: 761px) {
+    .panel { top: 64px; transform: none; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <header>
+    <img class="wordmark" src="assets/vyven-wordmark.png" alt="VYVEN" />
+    <span class="chip left">The Weave</span>
+    <span class="spacer"></span>
+    <button class="info-btn" id="btn-info" aria-label="About this concept">i</button>
+  </header>
+
+  <div class="narrative">
+    <div class="eyebrow">VYVEN&nbsp;·&nbsp;weaven</div>
+    <h1 id="narr-title">Two&nbsp;experiences.<br /><em>Drawn&nbsp;apart.</em></h1>
+    <p id="narr-sub">Two strings. Two lives, two presences. Slide them together and watch them weave into one — the VYVEN mark, built live from its own equations.</p>
+  </div>
+
+  <div class="panel" id="panel">
+    <h2>The Weave</h2>
+    <p class="lead">Pull the two strings of experience together. Where they meet, a memory forms.</p>
+
+    <div class="weave-row">
+      <div class="wl"><span class="name">Weave</span><span class="pct" id="v-weave">0%</span></div>
+      <input type="range" id="sl-weave" min="0" max="1" step="0.001" value="0" />
+    </div>
+
+    <div class="ctl adv">
+      <div class="row"><label>Radius · R</label><span class="val" id="v-R">2.40</span></div>
+      <input type="range" id="sl-R" min="1.6" max="3.2" step="0.01" value="2.4" />
+    </div>
+    <div class="ctl adv">
+      <div class="row"><label>Amplitude · A</label><span class="val" id="v-A">1.45</span></div>
+      <input type="range" id="sl-A" min="0.3" max="2.6" step="0.01" value="1.45" />
+    </div>
+    <div class="ctl adv">
+      <div class="row"><label>Lobes · f</label><span class="val" id="v-f">5</span></div>
+      <input type="range" id="sl-f" min="3" max="8" step="1" value="5" />
+    </div>
+    <div class="ctl adv">
+      <div class="row"><label>Height · H</label><span class="val" id="v-H">1.30</span></div>
+      <input type="range" id="sl-H" min="0.2" max="2.2" step="0.01" value="1.3" />
+    </div>
+    <div class="ctl adv">
+      <div class="row"><label>Twist</label><span class="val" id="v-twist">1.50</span></div>
+      <input type="range" id="sl-twist" min="0" max="4" step="0.01" value="1.5" />
+    </div>
+    <div class="ctl adv">
+      <div class="row"><label>Ribbon width</label><span class="val" id="v-width">0.42</span></div>
+      <input type="range" id="sl-width" min="0.2" max="0.7" step="0.01" value="0.42" />
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="btn-weave">Weave</button>
+      <button class="presence ready" id="btn-presence">Presence</button>
+    </div>
+    <div class="actions" style="margin-top:9px">
+      <button id="btn-reset">Unweave</button>
+    </div>
+
+    <button class="eq-toggle" id="btn-eq">Show the math &nbsp;›</button>
+    <div class="eq collapsed" id="eq">
+      <div><span class="lbl">x(t)</span> = (R + A·cos(<b>f</b>t))·cos(t)</div>
+      <div><span class="lbl">y(t)</span> = (R + A·cos(<b>f</b>t))·sin(t)</div>
+      <div><span class="lbl">z(t)</span> = H·sin(½ft) + 0.35A·sin((f+1)t)</div>
+      <div style="margin-top:8px">R=<b id="eq-R">2.40</b> &nbsp; A=<b id="eq-A">1.45</b> &nbsp; f=<b id="eq-f">5</b> &nbsp; H=<b id="eq-H">1.30</b></div>
+    </div>
+  </div>
+
+  <div class="hint"><b>Drag</b> to spin&nbsp;&nbsp;·&nbsp;&nbsp;<b>Slide</b> to weave&nbsp;&nbsp;·&nbsp;&nbsp;<b>Presence</b> to feel the room</div>
+
+  <div class="about" id="about">
+    <div class="box">
+      <button class="close" id="about-close" aria-label="Close">✕</button>
+      <h3>The idea behind the mark</h3>
+      <div class="sub">VYVEN · pronounced "weaven"</div>
+      <p>The name comes from <b>weaving</b> — two distinct sets of threads interlaced into a single fabric. We do it with people. Different lives, different presences, converging into one shared moment.</p>
+      <p>The logo isn't drawn. It's <b>generated</b> — a parametric ribbon swept along a string-theory-inspired curve. Two edge curves (the two strings of experience) are offset from a single path and lofted together into one surface. That loft <i>is</i> the memory.</p>
+      <ul class="layers">
+        <li>A 3D parametric center curve</li>
+        <li>Oscillatory radial &amp; vertical modulation</li>
+        <li>A moving local frame with continuous twist</li>
+        <li>Two edge curves, lofted &amp; thickened into the ribbon</li>
+      </ul>
+      <p>Pull the <b>Weave</b> slider and the two strings draw together until they become the mark. Press <b>Presence</b> and the form dissolves into a field of living light — every dot a person, every person there. <b>Thousands of perspectives. One shared moment.</b></p>
+    </div>
+  </div>
+
+  <div id="intro">
+    <img src="assets/vyven-wordmark.png" alt="VYVEN" />
+    <div class="sub">The Weave</div>
+    <div class="bar"><i></i></div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
