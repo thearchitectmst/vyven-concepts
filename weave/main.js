@@ -219,6 +219,17 @@ function makeString(color) {
 const strL = makeString(COL.stringL);
 const strR = makeString(COL.stringR);
 
+// string look — brightness (glow) + per-string colour, user-adjustable
+let glow = 0.45;
+const baseColL = new THREE.Color(COL.stringL);
+const baseColR = new THREE.Color(COL.stringR);
+function applyStringLook() {
+  const f = 0.15 + glow * 1.1;   // 0 -> dim threads, 1 -> bright light-strings
+  strL.mat.color.copy(baseColL).multiplyScalar(f);
+  strR.mat.color.copy(baseColR).multiplyScalar(f);
+}
+applyStringLook();
+
 const _hx = new THREE.Vector3();
 function updateStrings(m) {
   for (let i = 0; i < RINGS; i++) {
@@ -417,7 +428,7 @@ function setFormOpacity(o) {
 // =====================================================================
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.62, 0.55, 0.22);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.55, 0.26);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 const grain = new ShaderPass({
@@ -491,6 +502,19 @@ slWeave.addEventListener('input', () => {
   refreshNarrative();
   lastInteract = performance.now();
 });
+
+// string glow + colour controls
+const slGlow = $('sl-glow');
+setFill(slGlow);
+slGlow.addEventListener('input', () => {
+  glow = +slGlow.value;
+  $('v-glow').textContent = Math.round(glow * 100) + '%';
+  setFill(slGlow);
+  applyStringLook();
+  lastInteract = performance.now();
+});
+$('col-L').addEventListener('input', (e) => { baseColL.set(e.target.value); applyStringLook(); });
+$('col-R').addEventListener('input', (e) => { baseColR.set(e.target.value); applyStringLook(); });
 
 function syncEq() {
   $('eq-R').textContent = P.R.toFixed(2);
@@ -584,6 +608,7 @@ let snapStatic = false;
 if (SNAP) {
   P.m = qs.has('m') ? +qs.get('m') : 1;
   for (const k of ['R', 'A', 'f', 'H', 'twist', 'width']) if (qs.has(k)) P[k] = +qs.get(k);
+  if (qs.has('glow')) { glow = +qs.get('glow'); applyStringLook(); }
   controls.autoRotate = false;
   if (qs.has('pres')) {
     snapStatic = true;

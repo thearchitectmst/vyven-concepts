@@ -122,6 +122,15 @@
   .weave-row input[type=range] { height: 6px; }
   .weave-row input[type=range]::-webkit-slider-thumb { width: 20px; height: 20px; }
 
+  .swatches { display: flex; gap: 8px; }
+  .swatches input[type=color] {
+    -webkit-appearance: none; appearance: none; width: 30px; height: 18px;
+    border: 1px solid var(--pill-border); border-radius: 6px; background: none; cursor: pointer; padding: 0;
+  }
+  .swatches input[type=color]::-webkit-color-swatch-wrapper { padding: 0; }
+  .swatches input[type=color]::-webkit-color-swatch { border: none; border-radius: 5px; }
+  .swatches input[type=color]::-moz-color-swatch { border: none; border-radius: 5px; }
+
   .actions { display: flex; gap: 9px; margin-top: 18px; }
   .actions button {
     flex: 1; font: 600 12.5px/1 "Rubik", sans-serif; letter-spacing: 0.03em;
@@ -257,6 +266,11 @@
       <input type="range" id="sl-weave" min="0" max="1" step="0.001" value="0" />
     </div>
 
+    <div class="ctl">
+      <div class="row"><label>String glow</label><span class="val" id="v-glow">45%</span></div>
+      <input type="range" id="sl-glow" min="0" max="1" step="0.01" value="0.45" />
+    </div>
+
     <div class="ctl adv">
       <div class="row"><label>Radius · R</label><span class="val" id="v-R">2.40</span></div>
       <input type="range" id="sl-R" min="1.6" max="3.2" step="0.01" value="2.4" />
@@ -280,6 +294,15 @@
     <div class="ctl adv">
       <div class="row"><label>Ribbon width</label><span class="val" id="v-width">0.42</span></div>
       <input type="range" id="sl-width" min="0.2" max="0.7" step="0.01" value="0.42" />
+    </div>
+    <div class="ctl adv">
+      <div class="row" style="align-items:center">
+        <label>String colours</label>
+        <span class="swatches">
+          <input type="color" id="col-L" value="#9fc2ff" aria-label="Colour of string A" />
+          <input type="color" id="col-R" value="#57f2ff" aria-label="Colour of string B" />
+        </span>
+      </div>
     </div>
 
     <div class="actions">
